@@ -1,0 +1,114 @@
+0 info it worked if it ends with ok
+1 verbose cli [ '/usr/local/bin/node', '/usr/local/bin/npm', 'install' ]
+2 info using npm@1.4.28
+3 info using node@v0.10.32
+4 verbose readDependencies using package.json deps
+5 verbose install where, deps [ '/Users/jcardinal/Dropbox/git/hubot',
+5 verbose install   [ 'hubot',
+5 verbose install     'hubot-diagnostics',
+5 verbose install     'hubot-google-images',
+5 verbose install     'hubot-google-translate',
+5 verbose install     'hubot-help',
+5 verbose install     'hubot-heroku-keepalive',
+5 verbose install     'hubot-maps',
+5 verbose install     'hubot-pugme',
+5 verbose install     'hubot-redis-brain',
+5 verbose install     'hubot-rules',
+5 verbose install     'hubot-scripts',
+5 verbose install     'hubot-shipit',
+5 verbose install     'hubot-slack',
+5 verbose install     'hubot-youtube' ] ]
+6 info preinstall hordebot@0.0.0
+7 verbose readDependencies using package.json deps
+8 verbose already installed skipping hubot-help@^0.1.1 /Users/jcardinal/Dropbox/git/hubot
+9 verbose already installed skipping hubot-heroku-keepalive@0.0.4 /Users/jcardinal/Dropbox/git/hubot
+10 verbose cache add [ 'hubot-maps@://github.com/jcardinal/hubot-maps/archive/0.0.1p.tar.gz',
+10 verbose cache add   null ]
+11 verbose cache add name=undefined spec="hubot-maps@://github.com/jcardinal/hubot-maps/archive/0.0.1p.tar.gz" args=["hubot-maps@://github.com/jcardinal/hubot-maps/archive/0.0.1p.tar.gz",null]
+12 verbose parsed url { protocol: null,
+12 verbose parsed url   slashes: null,
+12 verbose parsed url   auth: null,
+12 verbose parsed url   host: null,
+12 verbose parsed url   port: null,
+12 verbose parsed url   hostname: null,
+12 verbose parsed url   hash: null,
+12 verbose parsed url   search: null,
+12 verbose parsed url   query: null,
+12 verbose parsed url   pathname: 'hubot-maps@://github.com/jcardinal/hubot-maps/archive/0.0.1p.tar.gz',
+12 verbose parsed url   path: 'hubot-maps@://github.com/jcardinal/hubot-maps/archive/0.0.1p.tar.gz',
+12 verbose parsed url   href: 'hubot-maps@://github.com/jcardinal/hubot-maps/archive/0.0.1p.tar.gz' }
+13 verbose already installed skipping hubot-pugme@^0.1.0 /Users/jcardinal/Dropbox/git/hubot
+14 verbose already installed skipping hubot-redis-brain@0.0.2 /Users/jcardinal/Dropbox/git/hubot
+15 verbose cache add name="hubot-maps" spec="://github.com/jcardinal/hubot-maps/archive/0.0.1p.tar.gz" args=["hubot-maps","://github.com/jcardinal/hubot-maps/archive/0.0.1p.tar.gz"]
+16 verbose parsed url { protocol: null,
+16 verbose parsed url   slashes: null,
+16 verbose parsed url   auth: null,
+16 verbose parsed url   host: null,
+16 verbose parsed url   port: null,
+16 verbose parsed url   hostname: null,
+16 verbose parsed url   hash: null,
+16 verbose parsed url   search: null,
+16 verbose parsed url   query: null,
+16 verbose parsed url   pathname: '://github.com/jcardinal/hubot-maps/archive/0.0.1p.tar.gz',
+16 verbose parsed url   path: '://github.com/jcardinal/hubot-maps/archive/0.0.1p.tar.gz',
+16 verbose parsed url   href: '://github.com/jcardinal/hubot-maps/archive/0.0.1p.tar.gz' }
+17 verbose addNamed [ 'hubot-maps',
+17 verbose addNamed   '://github.com/jcardinal/hubot-maps/archive/0.0.1p.tar.gz' ]
+18 verbose addNamed [ null, null ]
+19 silly lockFile cb8763ab-hubot-maps-archive-0-0-1p-tar-gz hubot-maps@://github.com/jcardinal/hubot-maps/archive/0.0.1p.tar.gz
+20 verbose lock hubot-maps@://github.com/jcardinal/hubot-maps/archive/0.0.1p.tar.gz /Users/jcardinal/.npm/cb8763ab-hubot-maps-archive-0-0-1p-tar-gz.lock
+21 verbose already installed skipping hubot-rules@^0.1.0 /Users/jcardinal/Dropbox/git/hubot
+22 verbose already installed skipping hubot-scripts@^2.5.16 /Users/jcardinal/Dropbox/git/hubot
+23 info addNameTag [ 'hubot-maps',
+23 info addNameTag   '://github.com/jcardinal/hubot-maps/archive/0.0.1p.tar.gz' ]
+24 verbose already installed skipping hubot-shipit@^0.1.1 /Users/jcardinal/Dropbox/git/hubot
+25 verbose already installed skipping hubot-slack@^3.2.1 /Users/jcardinal/Dropbox/git/hubot
+26 verbose already installed skipping hubot-youtube@^0.1.2 /Users/jcardinal/Dropbox/git/hubot
+27 verbose request where is /hubot-maps
+28 verbose request registry https://registry.npmjs.org/
+29 verbose request id 80e06b6afe452d6a
+30 verbose url raw /hubot-maps
+31 verbose url resolving [ 'https://registry.npmjs.org/', './hubot-maps' ]
+32 verbose url resolved https://registry.npmjs.org/hubot-maps
+33 verbose request where is https://registry.npmjs.org/hubot-maps
+34 info trying registry request attempt 1 at 23:02:14
+35 verbose etag "EMG84E83AB0JPR5I4CIVG46YZ"
+36 http GET https://registry.npmjs.org/hubot-maps
+37 verbose already installed skipping hubot@^2.11.0 /Users/jcardinal/Dropbox/git/hubot
+38 verbose already installed skipping hubot-diagnostics@0.0.1 /Users/jcardinal/Dropbox/git/hubot
+39 verbose already installed skipping hubot-google-images@^0.1.2 /Users/jcardinal/Dropbox/git/hubot
+40 verbose already installed skipping hubot-google-translate@^0.1.0 /Users/jcardinal/Dropbox/git/hubot
+41 http 304 https://registry.npmjs.org/hubot-maps
+42 silly registry.get cb [ 304,
+42 silly registry.get   { date: 'Wed, 25 Feb 2015 05:02:14 GMT',
+42 silly registry.get     server: 'Apache',
+42 silly registry.get     via: '1.1 varnish',
+42 silly registry.get     'last-modified': 'Wed, 25 Feb 2015 05:02:14 GMT',
+42 silly registry.get     'cache-control': 'max-age=60',
+42 silly registry.get     etag: '"EMG84E83AB0JPR5I4CIVG46YZ"',
+42 silly registry.get     age: '0',
+42 silly registry.get     'x-served-by': 'cache-dfw1835-DFW',
+42 silly registry.get     'x-cache': 'MISS',
+42 silly registry.get     'x-cache-hits': '0',
+42 silly registry.get     'x-timer': 'S1424840534.918709,VS0,VE53',
+42 silly registry.get     vary: 'Accept',
+42 silly registry.get     'content-length': '0',
+42 silly registry.get     'keep-alive': 'timeout=10, max=50',
+42 silly registry.get     connection: 'Keep-Alive' } ]
+43 verbose etag https://registry.npmjs.org/hubot-maps from cache
+44 silly lockFile cb8763ab-hubot-maps-archive-0-0-1p-tar-gz hubot-maps@://github.com/jcardinal/hubot-maps/archive/0.0.1p.tar.gz
+45 silly lockFile cb8763ab-hubot-maps-archive-0-0-1p-tar-gz hubot-maps@://github.com/jcardinal/hubot-maps/archive/0.0.1p.tar.gz
+46 error notarget No compatible version found: hubot-maps@'://github.com/jcardinal/hubot-maps/archive/0.0.1p.tar.gz'
+46 error notarget Valid install targets:
+46 error notarget ["0.0.0","0.0.1"]
+46 error notarget
+46 error notarget This is most likely not a problem with npm itself.
+46 error notarget In most cases you or one of your dependencies are requesting
+46 error notarget a package version that doesn't exist.
+47 error System Darwin 14.1.0
+48 error command "/usr/local/bin/node" "/usr/local/bin/npm" "install"
+49 error cwd /Users/jcardinal/Dropbox/git/hubot
+50 error node -v v0.10.32
+51 error npm -v 1.4.28
+52 error code ETARGET
+53 verbose exit [ 1, true ]

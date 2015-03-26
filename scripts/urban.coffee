@@ -27,7 +27,7 @@ module.exports = (robot) ->
       if !found
         msg.send "I don't know what \"#{msg.match[1]}\" is"
         return
-      msg.send "#{entry.word}: #{entry.definition}"
+      msg.send "*#{entry.word}:* #{entry.definition}"
 
 
   robot.respond /(urban)( define)?( example)?( me)? (.*)/i, (msg) ->
@@ -36,9 +36,9 @@ module.exports = (robot) ->
         msg.send "\"#{msg.match[5]}\" not found"
         return
       if msg.match[3]
-        msg.send "#{entry.word}: #{entry.example}"
+        msg.send "*#{entry.word}:* #{entry.example}"
       else
-        msg.send "#{entry.word}: #{entry.definition}"
+        msg.send "*#{entry.word}:* #{entry.definition}"
 
 urbanDict = (msg, query, callback) ->
   msg.http("http://api.urbandictionary.com/v0/define?term=#{escape(query)}")

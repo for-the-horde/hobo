@@ -20,10 +20,11 @@ emojis = require("emojilib")
 module.exports = (robot) ->
   robot.respond /(emoji)\s(.*)/i, (msg) ->
     words = msg.match[2].split(' ')
-    sentence = ""
+    sentence = []
     for word in words
-      sentence += findAnEmojiFor(word)
-    msg.send sentence
+      sentence.push(findAnEmojiFor(word))
+    console.log(sentence)
+    msg.send sentence.join(" ")
 
 findAnEmojiFor = (keyword) ->
   keyword = keyword.trim().toLowerCase()

@@ -14,8 +14,8 @@ querystring = require('querystring')
 fs = require('fs')
 
 module.exports = (robot) ->
-  HUBOT_CODE_OF_CONDUCT_FILE = process.env.HUBOT_CODE_OF_CONDUCT_FILE
-  HUBOT_CODE_OF_CONDUCT_WELCOME_MESSAGE = process.env.HUBOT_CODE_OF_CONDUCT_WELCOME_MESSAGE or "Welcome to For the Horde! Here's our code of conduct. Also, hop over to #introductions and tell us about yourself."
+  HUBOT_CODE_OF_CONDUCT_FILE = process.env.HUBOT_CODE_OF_CONDUCT_FILE or "code_of_conduct.md"
+  HUBOT_CODE_OF_CONDUCT_WELCOME_MESSAGE = process.env.HUBOT_CODE_OF_CONDUCT_WELCOME_MESSAGE or "Welcome to For the Horde! Here's our code of conduct. Also, hop over to <#introductions> and tell us about yourself."
   HUBOT_CODE_OF_CONDUCT_JOIN_CHANNEL = process.env.HUBOT_CODE_OF_CONDUCT_JOIN_CHANNEL or 'general'
 
   if _.isUndefined(HUBOT_CODE_OF_CONDUCT_FILE) || _.isNull(HUBOT_CODE_OF_CONDUCT_FILE)

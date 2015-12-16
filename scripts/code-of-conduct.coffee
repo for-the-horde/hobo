@@ -8,9 +8,6 @@
 #
 # Commands:
 #   hubot code of conduct - Hubot will reply with the current code of conduct content and the optional contributing url.
-_ = require('underscore')
-clark = require('clark')
-querystring = require('querystring')
 fs = require('fs')
 
 module.exports = (robot) ->

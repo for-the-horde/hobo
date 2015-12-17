@@ -37,7 +37,8 @@ module.exports = (robot) ->
       msg.reply "Done!"
 
   robot.respond /code of conduct/i, (msg) ->
-    msg.send codeOfConduct
+    msg.reply "Sent via DM! Thanks for asking... :hug:"
+    robot.send room: msg.message.user.name, codeOfConduct
 
 reloadFile = (filePath,callback) ->
   fs.realpath filePath, (err, resolvedPath) ->

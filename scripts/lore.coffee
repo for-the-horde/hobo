@@ -21,4 +21,4 @@ module.exports = (robot) ->
     "story by @whoisjake, FtH Historian"
     ]
   robot.respond /lore/i, (msg) ->
-    msg.reply line for line in HUBOT_LORE
+    msg.send line for line in HUBOT_LORE

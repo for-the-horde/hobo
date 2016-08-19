@@ -51,5 +51,6 @@
 > - Justin Cardinal @justin
 > - Robert Nelson @robert
 > - Jake Good @whoisjake
+> - Kristina Durivage @kdurivage
 
 This Code of Conduct was adapted from Django Code of conduct: https://www.djangoproject.com/conduct/

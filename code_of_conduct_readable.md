@@ -22,7 +22,7 @@ Not all of us will agree all the time, but disagreement is no excuse for poor be
 
 We are a community of professionals, and we conduct ourselves professionally. Be kind to others. Do not insult or put down other participants. Harassment and other exclusionary behavior aren't acceptable.
 
-This includes, but is not limited to: 
+This includes, but is not limited to:
 
 - Violent threats or language directed against another person.
 - Discriminatory jokes and language.
@@ -30,7 +30,7 @@ This includes, but is not limited to:
 - Posting (or threatening to post) other people's personally identifying information ("doxing").
 - Personal insults, especially those using racist or sexist terms.
 - Unwelcome sexual attention.
-- Advocating for, or encouraging, any of the above behavior. 
+- Advocating for, or encouraging, any of the above behavior.
 - Repeated harassment of others.
 
 In general, if someone asks you to stop, then stop.
@@ -51,5 +51,6 @@ Please contact one of the following For the Horde admin Community members:
 - Justin Cardinal @justin
 - Robert Nelson @robert
 - Jake Good @whoisjake
+- Kristina Durivage @kdurivage
 
 This Code of Conduct was adapted from Django Code of conduct: https://www.djangoproject.com/conduct/

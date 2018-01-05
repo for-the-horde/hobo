@@ -9,5 +9,6 @@
   "hubot-rules",
   "hubot-youtube",
   "hubot-plusplus",
-  "hubot-quote"
+  "hubot-flip",
+  "hubot-applause"
 ]

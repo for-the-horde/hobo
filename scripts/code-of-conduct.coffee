@@ -26,8 +26,9 @@ module.exports = (robot) ->
 
   robot.enter (msg) ->
     if msg.message.room is HUBOT_CODE_OF_CONDUCT_JOIN_CHANNEL
-      robot.send room: msg.message.user.name, HUBOT_CODE_OF_CONDUCT_WELCOME_MESSAGE
-      robot.send room: msg.message.user.name, codeOfConduct
+      room = robot.adapter.client.rtm.dataStore.getDMByName msg.message.user.name
+      robot.messageRoom room.id, HUBOT_CODE_OF_CONDUCT_WELCOME_MESSAGE
+      robot.messageRoom room.id, codeOfConduct
       msg.finish
 
   robot.respond /reload code of conduct/i, (msg) ->
@@ -38,7 +39,8 @@ module.exports = (robot) ->
 
   robot.respond /code of conduct/i, (msg) ->
     msg.reply "Sent via DM! Thanks for asking... :hug:"
-    robot.send room: msg.message.user.name, codeOfConduct
+    room = robot.adapter.client.rtm.dataStore.getDMByName msg.message.user.name
+    robot.messageRoom room.id, codeOfConduct
 
 reloadFile = (filePath,callback) ->
   fs.realpath filePath, (err, resolvedPath) ->

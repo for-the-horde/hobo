@@ -1,9 +1,8 @@
-
 # Description:
 #   Tell a story with emoji
 #
 # Commands:
-#   hubot tell me a story
+#   hubot tell me a story - Tells a story with emoji
 
 module.exports = (robot) ->
   robot.respond /tell me a story/i, (msg) ->
@@ -884,4 +883,3 @@ module.exports = (robot) ->
     story = "#{randomEmoji()} #{randomEmoji()} #{randomEmoji()} #{randomEmoji()} #{randomEmoji()}"
     msg.send story
     msg['message']['done'] = true
-

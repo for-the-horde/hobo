@@ -1,5 +1,8 @@
 # Description:
 #   A hubot script that tells the story of FtH
+#
+# Commands:
+#   hubot lore - Tells the story of For the Horde
 
 module.exports = (robot) ->
   HUBOT_LORE = [

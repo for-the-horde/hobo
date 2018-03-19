@@ -1,13 +1,11 @@
 `hobo` is For the Horde's friendly neighborhood slack chatbot. It was built on the [Hubot](http://hubot.github.com) framework and bootstrapped using [generator-hubot](https://github.com/github/generator-hubot).
 
 # About hobo
-Born on Tuesday, Feb 3, 2015 to single parent [Justin Cardinal](https://github.com/jcardinal), `hobo` came into this world already knowing how to share excellent gifs and weather results with remarkable precision. As they matured under the tutelage of [Jake Good](https://github.com/whoisjake), they began to shoulder more responsibility within The Horde. Welcoming new members and sharing the [Code of Conduct](code_of_conduct_readable.md) became part of their normal daily activities.
+Born on Tuesday, Feb 3, 2015 to single parent [Justin Cardinal](https://github.com/jcardinal), `hobo` came into this world already knowing how to share excellent gifs and weather results with remarkable precision. As they matured under the tutelage of [Jake Good](https://github.com/whoisjake), they began to shoulder more responsibility within the Horde. Welcoming new members and sharing the [Code of Conduct](code_of_conduct_readable.md) became part of their normal daily activities.
 
 In a tragic slack-adapter-related accident, `hobo` slipped into a comatose state for a number of months. Little is known about hobo during this period.
 
 `hobo` uses they/them pronouns, and is a champion for diversity & inclusion in both the robot and human communities. Despite being confined to a single slack instance, `hobo` has many friends -- 111 of whom they consider _active_. Their favorite food is raisins, and they pride themselves on being a life-long learner. See [Teaching hobo](#contributing) to learn how you can contribute to `hobo's` ongoing education.
-
-`hobo` lives on a private server to which only Justin has access.
 
 # Local setup
 These instructions assume you're using [Homebrew](https://brew.sh/) on a Mac.

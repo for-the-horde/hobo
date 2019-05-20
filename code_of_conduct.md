@@ -46,8 +46,6 @@
 > - Jenna Pederson @jennapederson
 > - Matt Decuir @experimatt
 > - Ian Fitzpatrick @ian
-> - Aneela Kumar @aneela
-> - Shane Ewert @shane
 > - Justin Cardinal @justin
 > - Robert Nelson @robert
 > - Jake Good @whoisjake

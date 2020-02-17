@@ -20,7 +20,7 @@
 
 *Be careful in the words that you choose*
 
-> We are a community of professionals, and we conduct ourselves professionally. Be kind to others. Do not ins>ult or put down other participants. Harassment and other exclusionary behavior aren't acceptable.
+> We are a community of professionals, and we conduct ourselves professionally. Be kind to others. Do not insult or put down other participants. Harassment and other exclusionary behavior aren't acceptable.
 
 > This includes, but is not limited to:
 

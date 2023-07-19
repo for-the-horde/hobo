@@ -28,7 +28,7 @@ This includes, but is not limited to:
 - Discriminatory jokes and language.
 - Posting sexually explicit or violent material.
 - Posting (or threatening to post) other people's personally identifying information ("doxing").
-- Personal insults, especially those using racist or sexist terms.
+- Personal insults, especially those using racist, xenophobic, ableist, homophobic, and sexist terms.
 - Unwelcome sexual attention.
 - Advocating for, or encouraging, any of the above behavior.
 - Repeated harassment of others.

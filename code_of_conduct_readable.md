@@ -39,6 +39,10 @@ In general, if someone asks you to stop, then stop.
 
 Disagreements, both social and technical, happen all the time and For the Horde is no exception. It is important that we resolve disagreements and differing views constructively and respectfully. Remember that we’re different. The strength of For the Horde community comes from its varied community, people from a wide range of backgrounds. Different people have different perspectives on issues. Being unable to understand why someone holds a viewpoint doesn’t mean that they’re wrong. Don’t forget that it is human to err and blaming each other doesn’t get us anywhere. Instead, focus on helping to resolve issues and learning from mistakes.
 
+#### For the Horde is a community to partipate in, not promote to
+
+Promoting something you're passionate about is not banned, but we want the community to be participants first, promoters second. If you want to promote something, please first find an appropriate channel that is relevant to what you're promoting. For example, an event might be promoted in #event-share, and requests for work in #gigs. #general should not include promotional posts. Cross posting is discouraged, and if you must, do not copy and paste the full message; instead share a link to it, which will unfurl a preview. If you are intending to join solely to access the community as an audience, this is not the community for you.
+
 #### Need to Report a Violation or Have a Question?
 
 Please contact one of the following For the Horde admin Community members:

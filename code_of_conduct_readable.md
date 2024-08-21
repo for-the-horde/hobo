@@ -55,6 +55,6 @@ Please contact one of the following For the Horde admin Community members:
 - Jake Good @whoisjake
 - Kristina Durivage @kdurivage
 - Eryn O'Neil @eryno
-- Kisha Delain @ekisha
+- Kisha Delain @kisha
 
 This Code of Conduct was adapted from Django Code of conduct: https://www.djangoproject.com/conduct/

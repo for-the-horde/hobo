@@ -8,3 +8,4 @@ npm-debug.log
 *.rdb
 *.aof
 backups/
+hobo-brain*.json

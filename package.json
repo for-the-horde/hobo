@@ -6,8 +6,8 @@
   "author": "Justin Cardinal <justin@somuchuptime.com>",
   "description": "A simple helpful robot for your Horde",
   "scripts": {
-    "start": "hubot --adapter @hubot-friends/hubot-slack --name hobo",
-    "shell": "hubot --adapter Shell --name hobo",
+    "start": "hubot --adapter @hubot-friends/hubot-slack --name hobo --alias hobo",
+    "shell": "hubot --adapter Shell --name hobo --alias hobo",
     "test": "node --test"
   },
   "dependencies": {

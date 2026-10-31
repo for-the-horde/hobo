@@ -7,3 +7,4 @@ node_modules
 *.rdb
 *.aof
 backups
+hobo-brain*.json

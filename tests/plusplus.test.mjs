@@ -99,3 +99,50 @@ describe('plusplus helpers', () => {
     assert.equal(sparkline([3, 3]), '▁▁')
   })
 })
+
+describe('plusplus before the brain loads', () => {
+  it('ignores votes and never saves until the brain is connected', async () => {
+    const bot = await startRobot(['plusplus.mjs'], { brain: legacyBrain(), connect: false })
+    let saves = 0
+    bot.robot.brain.on('save', () => { saves++ })
+    try {
+      assert.deepEqual(await bot.say('justin++', { from: 'alice' }), [])
+      assert.deepEqual(await bot.say('hobo erase justin', { from: 'alice' }), [])
+      assert.equal(saves, 0)
+
+      bot.loadBrain()
+      const out = await bot.say('justin++', { from: 'alice' })
+      assert.equal(out[0].text, 'justin has 218 points')
+    } finally {
+      bot.stop()
+    }
+  })
+})
+
+describe('plusplus reserved names', () => {
+  let bot
+  beforeEach(async () => { bot = await startRobot(['plusplus.mjs'], { brain: legacyBrain() }) })
+  afterEach(() => bot.stop())
+
+  it('refuses names and reasons that would touch Object.prototype', async () => {
+    assert.deepEqual(await bot.say('constructor++', { from: 'alice' }), [])
+    assert.deepEqual(await bot.say('__proto__++ for fun', { from: 'alice' }), [])
+    assert.deepEqual(await bot.say('ian++ for __proto__', { from: 'alice' }), [])
+    assert.equal(Object.hasOwn(bot.robot.brain.data.plusPlus.scores, 'constructor'), false)
+    assert.equal(({}).fun, undefined)
+    const top = await bot.say('hobo top 3')
+    assert.equal(top[0].text.split('\n')[1], '1. justin : 217')
+  })
+})
+
+describe('bot name vs alias', () => {
+  it('answers to "hobo" even if Slack assigns the bot a different handle', async () => {
+    const bot = await startRobot(['plusplus.mjs'], { brain: legacyBrain(), name: 'hobo2', alias: 'hobo' })
+    try {
+      const out = await bot.say('hobo score ian')
+      assert.equal(out[0].text, 'ian has 148 points.')
+    } finally {
+      bot.stop()
+    }
+  })
+})

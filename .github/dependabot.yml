@@ -12,6 +12,10 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    ignore:
+      # Move Node majors by hand, to the next even-numbered (LTS) release.
+      - dependency-name: node
+        update-types: [version-update:semver-major]
 
   - package-ecosystem: docker-compose
     directory: /

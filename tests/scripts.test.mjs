@@ -22,8 +22,8 @@ describe('hobo scripts', () => {
     const coc = await readFile('code_of_conduct.md', 'utf8')
     const out = await bot.say('hobo code of conduct', { from: 'carol' })
     assert.equal(out.length, 2)
-    assert.deepEqual(out[0], { kind: 'reply', room: 'C-general', text: 'Sent via DM! Thanks for asking... :hug:' })
-    assert.deepEqual(out[1], { kind: 'send', room: 'U-carol', text: coc })
+    assert.deepEqual(out[0], { kind: 'send', room: 'U-carol', text: coc })
+    assert.deepEqual(out[1], { kind: 'reply', room: 'C-general', text: 'Sent via DM! Thanks for asking... :hug:' })
     assert.match(coc, /^\*For the Horde Code of Conduct\*/)
   })
 

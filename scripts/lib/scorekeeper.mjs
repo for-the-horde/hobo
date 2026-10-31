@@ -9,10 +9,18 @@
 //   }
 
 const SPAM_WINDOW_MS = 5 * 1000
+// Names that would hit Object.prototype instead of creating a score.
+const RESERVED = new Set(['__proto__', 'constructor', 'prototype'])
+const has = (obj, key) => Object.hasOwn(obj, key)
 
 export default class ScoreKeeper {
   constructor (robot) {
     this.robot = robot
+    // hubot-redis-brain emits 'connected' once the stored brain is merged in.
+    // Until then plusPlus is an empty placeholder, and saving it would
+    // overwrite the real brain in Redis.
+    this.ready = false
+    this.robot.brain.on('connected', () => { this.ready = true })
     const storageLoaded = () => {
       const data = this.robot.brain.data
       data.plusPlus ??= { scores: {}, log: {}, reasons: {}, last: {} }
@@ -26,15 +34,20 @@ export default class ScoreKeeper {
   }
 
   getUser (user) {
-    this.storage.scores[user] ??= 0
-    this.storage.reasons[user] ??= {}
+    if (!has(this.storage.scores, user)) this.storage.scores[user] = 0
+    if (!has(this.storage.reasons, user)) this.storage.reasons[user] = {}
     return user
+  }
+
+  isValidKey (key) {
+    return !RESERVED.has(key)
   }
 
   saveUser (user, from, room, reason) {
     this.saveScoreLog(user, from, room, reason)
     this.robot.brain.save()
-    return [this.storage.scores[user], this.storage.reasons[user][reason] || 'none']
+    const reasons = this.storage.reasons[user]
+    return [this.storage.scores[user], (reason != null && has(reasons, reason) && reasons[reason]) || 'none']
   }
 
   add (user, from, room, reason) {
@@ -50,7 +63,8 @@ export default class ScoreKeeper {
     user = this.getUser(user)
     this.storage.scores[user] += delta
     if (reason) {
-      this.storage.reasons[user][reason] = (this.storage.reasons[user][reason] || 0) + delta
+      const reasons = this.storage.reasons[user]
+      reasons[reason] = (has(reasons, reason) ? reasons[reason] : 0) + delta
     }
     return this.saveUser(user, from, room, reason)
   }
@@ -77,7 +91,7 @@ export default class ScoreKeeper {
   }
 
   saveScoreLog (user, from, room, reason) {
-    if (typeof this.storage.log[from] !== 'object' || this.storage.log[from] === null) {
+    if (!has(this.storage.log, from) || typeof this.storage.log[from] !== 'object' || this.storage.log[from] === null) {
       this.storage.log[from] = {}
     }
     this.storage.log[from][user] = new Date().toISOString()
@@ -85,15 +99,15 @@ export default class ScoreKeeper {
   }
 
   last (room) {
-    const last = this.storage.last[room]
+    const last = has(this.storage.last, room) ? this.storage.last[room] : null
     if (last == null) return [undefined, undefined]
     if (typeof last === 'string') return [last, '']
     return [last.user, last.reason]
   }
 
   isSpam (user, from) {
-    this.storage.log[from] ??= {}
-    const submitted = this.storage.log[from][user]
+    if (!has(this.storage.log, from)) this.storage.log[from] = {}
+    const submitted = has(this.storage.log[from], user) && this.storage.log[from][user]
     if (!submitted) return false
     const isSpam = new Date(submitted).getTime() + SPAM_WINDOW_MS > Date.now()
     if (!isSpam) delete this.storage.log[from][user]
@@ -101,7 +115,7 @@ export default class ScoreKeeper {
   }
 
   validate (user, from) {
-    return user != null && user !== '' && user !== from && !this.isSpam(user, from)
+    return user != null && user !== '' && user !== from && this.isValidKey(user) && this.isValidKey(from) && !this.isSpam(user, from)
   }
 
   top (amount) {

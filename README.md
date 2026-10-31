@@ -31,24 +31,26 @@ Tests live in `tests/` and use a fake chat adapter, so they don't need Slack or 
 
 hobo runs on a small EC2 instance (arm64) with Docker and the Compose plugin. Nothing listens for inbound connections: Socket Mode connects out to Slack.
 
-1. **Slack app.** Create it from `slack-app-manifest.yaml`, or apply that manifest to the existing app. Install it to the workspace, then create an app-level token with the `connections:write` scope.
+1. **Slack app.** Create it from `slack-app-manifest.yaml`, or apply that manifest to the existing app. Install it to the workspace, then create an app-level token with the `connections:write` scope. Then `/invite @hobo` to each channel hobo should hear; a new app doesn't inherit the old bot's channels. hobo is started with `--alias hobo`, so "hobo ..." works even if Slack gives the bot user a different handle.
 2. **Config.** On the host, clone this repo, copy `.env.example` to `.env`, and fill in `HUBOT_SLACK_APP_TOKEN` and `HUBOT_SLACK_BOT_TOKEN`.
-3. **Restore the brain (first deploy only).** Start Redis alone, load the brain, and check it **before** hobo starts. If hobo starts first, it creates an empty brain and saves it.
+3. **Restore the brain (first deploy only).** Start Redis alone, load the brain, and check it **before** hobo starts. If hobo starts first, it creates an empty brain and saves it. Keep `hobo-brain.json` outside the repo directory so it can't end up in an image or a commit; it holds every member's Slack profile.
    ```
    docker compose up -d redis
-   docker compose exec -T redis redis-cli -x SET hubot:storage < hobo-brain.json
-   docker compose exec redis redis-cli STRLEN hubot:storage
+   docker compose exec -T redis redis-cli -x SET hubot:storage < ~/hobo-brain.json
+   docker compose exec -T redis redis-cli --raw GET hubot:storage | jq '{users: (.users | length), scores: (.plusPlus.scores | length)}'
    ```
-   `hobo-brain.json` is the old `hubot:storage` value, exported with `redis-cli --raw GET hubot:storage > hobo-brain.json` from a Redis that has the old dump loaded.
+   The last command needs `jq` (`sudo apt install jq`) and should print the user and karma counts you expect (918 and 559 for the 2022 brain). `~/hobo-brain.json` is the old `hubot:storage` value, exported with `redis-cli --raw GET hubot:storage > ~/hobo-brain.json` from a Redis that has the old dump loaded.
 4. **Start.** `docker compose up -d --build`, then `docker compose logs -f hobo`.
 
 **Upgrades:** `git pull && docker compose up -d --build`. Dependabot opens PRs for npm packages, the Node and Redis images, and GitHub Actions.
 
-**Backups:** `bin/backup-brain.sh` writes a gzipped copy of the brain to `backups/` and keeps the newest 30. If `HOBO_BACKUP_S3_URI` is set, it also copies each backup to S3. Run it nightly from cron; the script's header has an example line.
+**Backups:** `bin/backup-brain.sh` writes a gzipped copy of the brain to `backups/`, keeps the newest 30, and logs to `backups/backup.log`. If `HOBO_BACKUP_S3_URI` is set, it also copies each backup to S3. Run it nightly from cron; the script's header has an example line.
 
 # To do (not blocking)
 
-* Decide whether to bring back `translate` and `pugme` (both were dropped in the Hubot 14 port).
+Dropped in the Hubot 14 port: google-images (image me / animate me), maps, youtube, pugme, translate, shipit, hubot-scripts, and the welcome DM for new members.
+
+* Decide whether to bring back `translate` (dropped in the Hubot 14 port).
 * Replace `hubot-quote`. Its data (43 quotes) is still in the brain, msgpack-encoded under `_private.quoteMessageStore`, but the plugin needs a native module that no longer builds.
 * Refresh the dead image links in `scripts/comments.mjs` and `scripts/applause.mjs`.
 

@@ -48,13 +48,21 @@ export default (robot) => {
 
   const voteRegex = new RegExp(`^(${NAME_CHARS})\\s*(\\+\\+|--|—)(?:\\s+(?:${conjunctions})\\s+(.+))?$`, 'i')
 
+  const notReady = () => {
+    if (scoreKeeper.ready) return false
+    robot.logger.warn('plusplus: ignoring a karma command because the brain has not loaded yet')
+    return true
+  }
+
   robot.hear(voteRegex, async (res) => {
+    if (notReady()) return
     let [, name, operator, reason] = res.match
     const from = (res.message.user.name || '').toLowerCase()
     const room = res.message.room
 
     reason = reason?.trim().toLowerCase()
     name = cleanName(name)
+    if (reason != null && !scoreKeeper.isValidKey(reason)) return
 
     if (!name) {
       const [lastName, lastReason] = scoreKeeper.last(room)
@@ -86,11 +94,13 @@ export default (robot) => {
   })
 
   robot.respond(new RegExp(`(?:erase )(${NAME_CHARS})(?:\\s+(?:for|because|cause|cuz)\\s+(.+))?$`, 'i'), async (res) => {
+    if (notReady()) return
     let [, name, reason] = res.match
     const from = (res.message.user.name || '').toLowerCase()
     const user = res.envelope.user
     reason = reason?.trim().toLowerCase()
     name = cleanName(name)
+    if (!name || !scoreKeeper.isValidKey(name) || (reason != null && !scoreKeeper.isValidKey(reason))) return
 
     const auth = robot.auth
     const isAdmin = auth?.hasRole(user, 'plusplus-admin') || auth?.hasRole(user, 'admin')
@@ -104,7 +114,9 @@ export default (robot) => {
   })
 
   robot.respond(new RegExp(`(?:${scoreKeyword}) (?:for\\s+)?(.*)`, 'i'), async (res) => {
+    if (notReady()) return
     const name = cleanName(res.match[1].trim())
+    if (!name || !scoreKeeper.isValidKey(name)) return
     const score = scoreKeeper.scoreForUser(name)
     const reasons = scoreKeeper.reasonsForUser(name)
 
@@ -117,6 +129,7 @@ export default (robot) => {
   })
 
   robot.respond(/(top|bottom) (\d+)/i, async (res) => {
+    if (notReady()) return
     const direction = res.match[1].toLowerCase()
     const amount = parseInt(res.match[2], 10) || 10
     const tops = scoreKeeper[direction](amount)
@@ -135,8 +148,16 @@ export default (robot) => {
   // Read-only JSON endpoint. The original's unauthenticated GET /normalize-points
   // (which rewrote everyone's scores) is intentionally not ported.
   robot.router.get(`/${robot.name}/scores`, (req, res) => {
+    if (!scoreKeeper.ready) {
+      res.status(503).json({ error: 'brain not loaded yet' })
+      return
+    }
     const { name, direction = 'top', limit = 10 } = req.query ?? {}
     if (name) {
+      if (!scoreKeeper.isValidKey(String(name).toLowerCase())) {
+        res.status(400).json({ error: 'invalid name' })
+        return
+      }
       res.json({ [name]: scoreKeeper.scoreForUser(String(name).toLowerCase()) })
       return
     }

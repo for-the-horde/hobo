@@ -14,4 +14,5 @@ RUN npm ci --omit=dev && npm cache clean --force
 COPY . .
 
 USER node
-CMD ["node_modules/.bin/hubot", "--adapter", "@hubot-friends/hubot-slack", "--name", "hobo"]
+# --alias keeps "hobo ..." working even if Slack gives the bot user a different handle.
+CMD ["node_modules/.bin/hubot", "--adapter", "@hubot-friends/hubot-slack", "--name", "hobo", "--alias", "hobo"]

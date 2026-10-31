@@ -43,8 +43,8 @@ export default async (robot) => {
       await res.reply("Sorry, I can't find our code of conduct right now. Please ask my keeper to check on me.")
       return
     }
-    await res.reply('Sent via DM! Thanks for asking... :hug:')
     // Posting to a user ID delivers the message to the app's DM with that user.
     await robot.messageRoom(res.message.user.id, codeOfConduct)
+    await res.reply('Sent via DM! Thanks for asking... :hug:')
   })
 }

@@ -46,13 +46,9 @@ hobo runs on a small EC2 instance (arm64) with Docker and the Compose plugin. No
 
 **Backups:** `bin/backup-brain.sh` writes a gzipped copy of the brain to `backups/`, keeps the newest 30, and logs to `backups/backup.log`. If `HOBO_BACKUP_S3_URI` is set, it also copies each backup to S3. Run it nightly from cron; the script's header has an example line.
 
-# To do (not blocking)
+# Dropped in the Hubot 14 port
 
-Dropped in the Hubot 14 port: google-images (image me / animate me), maps, youtube, pugme, translate, shipit, hubot-scripts, and the welcome DM for new members.
-
-* Decide whether to bring back `translate` (dropped in the Hubot 14 port).
-* Replace `hubot-quote`. Its data (43 quotes) is still in the brain, msgpack-encoded under `_private.quoteMessageStore`, but the plugin needs a native module that no longer builds.
-* Refresh the dead image links in `scripts/comments.mjs` and `scripts/applause.mjs`.
+google-images (image me / animate me), maps, youtube, pugme, translate, applause (slow clap), the "for the comments" images, shipit, hubot-scripts, and the welcome DM for new members.
 
 # Contributing
 It's easy to contribute to hobo's capabilities! Whether you want to write a new script or just change some wording, all pull requests are welcome.

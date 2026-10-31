@@ -3,14 +3,11 @@ import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import { startRobot } from './helpers.mjs'
 import { EMOJI } from '../scripts/story.mjs'
-import { IMAGES } from '../scripts/comments.mjs'
-import { images as APPLAUSE } from '../scripts/applause.mjs'
 import { findAnEmojiFor } from '../scripts/emoji.mjs'
 import { urbanDict } from '../scripts/urban.mjs'
 
 const SCRIPTS = [
-  'applause.mjs', 'code-of-conduct.mjs', 'comments.mjs', 'emoji.mjs', 'flip.mjs',
-  'lore.mjs', 'origin-story.mjs', 'story.mjs', 'urban.mjs'
+  'code-of-conduct.mjs', 'emoji.mjs', 'flip.mjs', 'lore.mjs', 'origin-story.mjs', 'story.mjs', 'urban.mjs'
 ]
 
 describe('hobo scripts', () => {
@@ -53,12 +50,6 @@ describe('hobo scripts', () => {
     assert.equal((await bot.say('hobo flip'))[0].text, '(╯°□°）╯︵ ┻━┻')
     assert.equal((await bot.say('hobo rage flip hello'))[0].text, '(ノಠ益ಠ)ノ彡 oʃʃǝɥ')
     assert.equal((await bot.say('hobo unflip me', { from: 'dave' }))[0].text, 'dave ノ( º _ ºノ)')
-  })
-
-  it('answers "for the comments" and applause from their image lists', async () => {
-    assert.ok(IMAGES.includes((await bot.say("I'm just here for the comments"))[0].text))
-    assert.ok(APPLAUSE.sincere.includes((await bot.say('hobo slow clap'))[0].text))
-    assert.ok(APPLAUSE.insincere.includes((await bot.say('hobo sarcastic applause'))[0].text))
   })
 
   it('translates words to emoji', async () => {

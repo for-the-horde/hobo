@@ -1,4 +1,4 @@
-`hobo` is For the Horde's friendly neighborhood slack chatbot. It was built on the [Hubot](http://hubot.github.com) framework and bootstrapped using [generator-hubot](https://github.com/github/generator-hubot).
+`hobo` is For the Horde's friendly neighborhood slack chatbot. It was built on the [Hubot](http://hubot.github.com) framework and runs on Hubot 14 with the [`@hubot-friends/hubot-slack`](https://github.com/hubot-friends/hubot-slack) adapter (Slack Socket Mode).
 
 # About hobo
 Born on Tuesday, Feb 3, 2015 to single parent [Justin Cardinal](https://github.com/jcardinal), `hobo` came into this world already knowing how to share excellent gifs and weather results with remarkable precision. As they matured under the tutelage of [Jake Good](https://github.com/whoisjake), they began to shoulder more responsibility within the Horde. Welcoming new members and sharing the [Code of Conduct](code_of_conduct_readable.md) became part of their normal daily activities.
@@ -7,66 +7,56 @@ In a tragic slack-adapter-related accident, `hobo` slipped into a comatose state
 
 `hobo` uses they/them pronouns, and is a champion for diversity & inclusion in both the robot and human communities. Despite being confined to a single slack instance, `hobo` has many friends -- 111 of whom they consider _active_. Their favorite food is raisins, and they pride themselves on being a life-long learner. See [Teaching hobo](#contributing) to learn how you can contribute to `hobo's` ongoing education.
 
-# Local setup
-These instructions assume you're using [Homebrew](https://brew.sh/) on a Mac.
+# Running hobo locally
 
-## Prerequisites
-
-1. Node (`brew install node`)
-2. Redis (`brew install redis`)
-
-## Installation
-
-1. Clone the repo
-2. Set these environment variables if you want google images to work:
-    * `HUBOT_GOOGLE_CSE_KEY` - Your Google developer API key
-    * `HUBOT_GOOGLE_CSE_ID` - The ID of your Custom Search Engine
-
-## Running hobo locally
-
-1. Start redis (`brew services start redis`)
-2. Run `bin/hubot`
-
-On first run, hobo will install all relevant dependencies. Once it's up and running, you'll see an output that looks something like this:
+You need [Docker](https://docs.docker.com/get-docker/). Talk to hobo in your terminal with the Shell adapter (no Slack needed):
 
 ```
-$ bin/hubot
-added 236 packages in 4.658s
-hobo> [Sun Mar 18 2018 18:43:55 GMT-0500 (CDT)] INFO hubot-redis-brain: Using default redis on localhost:6379
-[Sun Mar 18 2018 18:43:55 GMT-0500 (CDT)] INFO hubot-redis-brain: Data for hubot brain retrieved from Redis
+docker compose run --rm hobo npm run shell
 ```
-If you don't initially see the `hobo>` prompt, just hit enter and it should appear. From there, you can interact with hobo as if you were chatting with them in Slack!
 
-## Interacting with hobo
-Here are a few commands we recommend. Use `hobo help` for the full list.
+This also starts a local Redis for hobo's brain. Type `hobo help` to see everything hobo knows.
 
-```
-hobo code of conduct        # DMs the code of conduct
-hobo lore                   # tells the story of For the Horde
-hobo tell me a story        # tells a story in emoji
-hobo <name>++ <reason>      # gives internet points to <name>
-hobo <name>-- <reason>      # takes away internet points from <name>
-hobo score <name>           # shows internet points for <name>
-hobo image <query>          # returns the top google image result for <query>; requires environment variables to be set
-hobo animate <query>        # returns the top gif result for <query>; requires environment variables to be set
-```
+Without Docker: install Node 24 and Redis, then `npm ci`, `redis-server &`, and `npm run shell`.
 
 ## Testing hobo
-We don't yet have an automated testing framework in place, so for now we manually test hobo.
 
-## Troubleshooting
+```
+npm test                                  # or: docker compose run --rm hobo node --test
+```
 
-1. Make sure redis is running
-2. If you get missing module errors, try deleting the `node_modules` directory and re-running `bin/hubot`
+Tests live in `tests/` and use a fake chat adapter, so they don't need Slack or Redis. CI runs them on every pull request and builds the Docker image on amd64 and arm64.
 
 # Deploying hobo
-`hobo` currently lives on a private server to which only Justin has access. Deploys are currently done manually.
+
+hobo runs on a small EC2 instance (arm64) with Docker and the Compose plugin. Nothing listens for inbound connections: Socket Mode connects out to Slack.
+
+1. **Slack app.** Create it from `slack-app-manifest.yaml`, or apply that manifest to the existing app. Install it to the workspace, then create an app-level token with the `connections:write` scope.
+2. **Config.** On the host, clone this repo, copy `.env.example` to `.env`, and fill in `HUBOT_SLACK_APP_TOKEN` and `HUBOT_SLACK_BOT_TOKEN`.
+3. **Restore the brain (first deploy only).** Start Redis alone, load the brain, and check it **before** hobo starts. If hobo starts first, it creates an empty brain and saves it.
+   ```
+   docker compose up -d redis
+   docker compose exec -T redis redis-cli -x SET hubot:storage < hobo-brain.json
+   docker compose exec redis redis-cli STRLEN hubot:storage
+   ```
+   `hobo-brain.json` is the old `hubot:storage` value, exported with `redis-cli --raw GET hubot:storage > hobo-brain.json` from a Redis that has the old dump loaded.
+4. **Start.** `docker compose up -d --build`, then `docker compose logs -f hobo`.
+
+**Upgrades:** `git pull && docker compose up -d --build`. Dependabot opens PRs for npm packages, the Node and Redis images, and GitHub Actions.
+
+**Backups:** `bin/backup-brain.sh` writes a gzipped copy of the brain to `backups/` and keeps the newest 30. If `HOBO_BACKUP_S3_URI` is set, it also copies each backup to S3. Run it nightly from cron; the script's header has an example line.
+
+# To do (not blocking)
+
+* Decide whether to bring back `translate` and `pugme` (both were dropped in the Hubot 14 port).
+* Replace `hubot-quote`. Its data (43 quotes) is still in the brain, msgpack-encoded under `_private.quoteMessageStore`, but the plugin needs a native module that no longer builds.
+* Refresh the dead image links in `scripts/comments.mjs` and `scripts/applause.mjs`.
 
 # Contributing
 It's easy to contribute to hobo's capabilities! Whether you want to write a new script or just change some wording, all pull requests are welcome.
 
 ## Scripts
-Please see the `/scripts` folder for examples of custom scripts we're using, and [Slack Developer Kit for Hubot](http://slackapi.github.io/hubot-slack/basic_usage) for more detailed documentation on how they work.
+Please see the `/scripts` folder for examples of custom scripts we're using, and the [Hubot scripting docs](https://hubotio.github.io/hubot/docs/scripting.html) for more detailed documentation on how they work.
 
 ## Contributors
 Thank you to everyone who's contributed to hobo!

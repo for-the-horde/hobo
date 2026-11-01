@@ -39,7 +39,16 @@ hobo runs on a small EC2 instance (arm64) with Docker and the Compose plugin. No
    docker compose exec -T redis redis-cli -x SET hubot:storage < ~/hobo-brain.json
    docker compose exec -T redis redis-cli --raw GET hubot:storage | jq '{users: (.users | length), scores: (.plusPlus.scores | length)}'
    ```
-   The last command needs `jq` (`sudo apt install jq`) and should print the user and karma counts you expect (918 and 559 for the 2022 brain). `~/hobo-brain.json` is the old `hubot:storage` value, exported with `redis-cli --raw GET hubot:storage > ~/hobo-brain.json` from a Redis that has the old dump loaded.
+   The last command needs `jq` (`sudo apt install jq`) and should print the user and karma counts you expect (918 and 559 for the 2022 brain). Delete `~/hobo-brain.json` once hobo is running; the nightly backups take over from there.
+
+   `~/hobo-brain.json` is only hobo's `hubot:storage` key, pulled out of the old Redis dump so other bots' keys sharing that dump don't come along. To extract it (on any machine with Docker):
+   ```
+   mkdir -p /tmp/hobo-rdb && cp <old-dump>.rdb /tmp/hobo-rdb/dump.rdb
+   docker run -d --rm --name hobo-rdb -v /tmp/hobo-rdb:/data redis:8-alpine redis-server --save '' --appendonly no
+   sleep 2
+   docker exec hobo-rdb redis-cli --raw GET hubot:storage > ~/hobo-brain.json
+   docker stop hobo-rdb && rm -rf /tmp/hobo-rdb
+   ```
 4. **Start.** `docker compose up -d --build`, then `docker compose logs -f hobo`.
 
 **Upgrades:** `git pull && docker compose up -d --build`. Dependabot opens PRs for npm packages, the Node and Redis images, and GitHub Actions.

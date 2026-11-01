@@ -1,7 +1,6 @@
 # Slack app manifest for hobo (Socket Mode, used by @hubot-friends/hubot-slack).
 # Create the app from this at https://api.slack.com/apps > Create New App > From a manifest,
 # or paste it into an existing app's "App Manifest" page.
-# For the test app, change both names to hobo-dev.
 display_information:
   name: hobo
   description: For the Horde's friendly neighborhood chatbot

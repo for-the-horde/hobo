@@ -1,0 +1,10 @@
+.git
+.github
+node_modules
+.env
+.env.*
+!.env.example
+*.rdb
+*.aof
+backups
+hobo-brain*.json

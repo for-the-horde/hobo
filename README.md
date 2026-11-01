@@ -53,7 +53,7 @@ hobo runs on a small EC2 instance (arm64) with Docker and the Compose plugin. No
 
 **Upgrades:** `git pull && docker compose up -d --build`. Dependabot opens PRs for npm packages, the Node and Redis images, and GitHub Actions.
 
-**Backups:** `bin/backup-brain.sh` writes a gzipped copy of the brain to `backups/`, keeps the newest 30, and logs to `backups/backup.log`. If `HOBO_BACKUP_S3_URI` is set, it also copies each backup to S3. Run it nightly from cron; the script's header has an example line.
+**Backups:** `bin/backup-brain.sh` writes a gzipped copy of the brain to `backups/`, keeps the newest 30, and logs to `backups/backup.log`. If `HOBO_BACKUP_S3_URI` is set to an object URL (e.g. `s3://fth-hobo/backups/hobo-brain.json.gz`), it also uploads the backup there, overwriting the same object each run. The bucket's versioning keeps the history. Run it nightly from cron; the script's header has an example line. To restore from S3, list versions with `aws s3api list-object-versions --bucket fth-hobo --prefix backups/`, download one with `aws s3api get-object --bucket fth-hobo --key backups/hobo-brain.json.gz --version-id <id> hobo-brain.json.gz`, then follow the restore step above using `gunzip -c`.
 
 # Dropped in the Hubot 14 port
 

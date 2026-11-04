@@ -1,15 +1,17 @@
 // Description:
 //   Give or take away points. Keeps track and even prints out graphs.
-//   Ported from hubot-plusplus 1.4.0 (ajacksified); brain data format is unchanged.
+//   Ported from hubot-plusplus 1.4.0 (ajacksified); its brain data still loads.
 //
 // Configuration:
 //   HUBOT_PLUSPLUS_KEYWORD - keyword(s) for showing a score, pipe separated. Default: "score"
 //   HUBOT_PLUSPLUS_REASONS - word used when listing reasons. Default: "raisins"
 //   HUBOT_PLUSPLUS_CONJUNCTIONS - pipe separated reason conjunctions. Default: "for|because|cause|cuz|as"
+//   HUBOT_PLUSPLUS_THREADS_PER_ROOM - threads per room that remember their last vote for a bare ++. Default: 50
 //
 // Commands:
 //   <name>++ [<reason>] - Increment score for a name (for a reason)
 //   <name>-- [<reason>] - Decrement score for a name (for a reason)
+//   ++ [<reason>] - Repeat the last vote (in this thread, if in one)
 //   hubot score <name> - Display the score for a name and some of the reasons
 //   hubot top <amount> - Display the top scoring <amount>
 //   hubot bottom <amount> - Display the bottom scoring <amount>
@@ -22,6 +24,7 @@
 //   ajacksified (original), ported for hobo
 
 import ScoreKeeper from './lib/scorekeeper.mjs'
+import { replyThread, withThread } from './lib/threads.mjs'
 
 const NAME_CHARS = "[\\s\\w'@.\\-:\\u3040-\\u30FF\\uFF01-\\uFF60\\u4E00-\\u9FA0]*"
 const SPARK_TICKS = ['▁', '▂', '▃', '▅', '▆', '▇']
@@ -54,25 +57,45 @@ export default (robot) => {
     return true
   }
 
+  // Needs the reactions:write scope; without it the vote still counts.
+  const markThreaded = async (message) => {
+    const reactions = robot.adapter.client?.web?.reactions
+    if (reactions == null) return
+    try {
+      await reactions.add({ channel: message.room, name: 'thread', timestamp: message.id })
+    } catch (err) {
+      robot.logger.warn(`plusplus: could not add a :thread: reaction: ${err.message}`)
+    }
+  }
+
   robot.hear(voteRegex, async (res) => {
     if (notReady()) return
     let [, name, operator, reason] = res.match
     const from = (res.message.user.name || '').toLowerCase()
     const room = res.message.room
+    let thread = replyThread(res.message)
+    let pileOn = false
 
     reason = reason?.trim().toLowerCase()
     name = cleanName(name)
     if (reason != null && !scoreKeeper.isValidKey(reason)) return
 
     if (!name) {
-      const [lastName, lastReason] = scoreKeeper.last(room)
+      const inThread = res.message.thread_ts != null
+      const [lastName, lastReason, lastThread] = inThread
+        ? scoreKeeper.lastByThread(room, res.message.thread_ts)
+        : scoreKeeper.last(room)
       name = lastName
       if (reason == null && lastReason) reason = lastReason
+      if (!inThread && lastThread != null) {
+        thread = lastThread
+        pileOn = true
+      }
     }
 
     const [score, reasonScore] = operator === '++'
-      ? scoreKeeper.add(name, from, room, reason)
-      : scoreKeeper.subtract(name, from, room, reason)
+      ? scoreKeeper.add(name, from, room, reason, thread)
+      : scoreKeeper.subtract(name, from, room, reason, thread)
 
     if (score == null) return
 
@@ -89,7 +112,9 @@ export default (robot) => {
       message = score === 1 ? `${name} has ${score} point` : `${name} has ${score} points`
     }
 
+    if (pileOn) res.envelope = withThread(res.envelope, thread)
     await res.send(message)
+    if (pileOn) await markThreaded(res.message)
     robot.emit('plus-one', { name, direction: operator, room, reason, from })
   })
 

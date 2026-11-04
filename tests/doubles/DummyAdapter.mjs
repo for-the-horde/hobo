@@ -7,6 +7,8 @@ export class DummyAdapter extends Adapter {
     super(robot)
     this.name = 'DummyAdapter'
     this.messages = new Set()
+    this.reactions = []
+    this.client = { web: { reactions: { add: async (args) => { this.reactions.push(args) } } } }
   }
 
   async send (envelope, ...strings) {
@@ -38,10 +40,12 @@ export class DummyAdapter extends Adapter {
     this.emit('closed')
   }
 
-  async say (user, message, room) {
+  async say (user, message, room, { ts, thread } = {}) {
     this.messages.add(message)
     user.room = room
-    await this.robot.receive(new TextMessage(user, message))
+    const textMessage = new TextMessage(user, message, ts)
+    if (thread != null) textMessage.thread_ts = thread
+    await this.robot.receive(textMessage)
   }
 }
 export default {

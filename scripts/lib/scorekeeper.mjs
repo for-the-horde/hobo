@@ -1,14 +1,17 @@
 // Score storage for plusplus.mjs, ported from hubot-plusplus 1.4.0 (ajacksified).
 //
-// The brain layout is unchanged so hobo's existing karma keeps working:
+// The brain layout is hubot-plusplus's, plus a thread on each last entry and a
+// lastByThread map, so hobo's existing karma keeps working:
 //   robot.brain.data.plusPlus = {
-//     scores:  { <name>: <number> },
-//     reasons: { <name>: { <reason>: <number> } },
-//     log:     { <from>: { <name>: <ISO date of last vote> } },
-//     last:    { <room>: { user: <name>, reason: <reason> } }
+//     scores:       { <name>: <number> },
+//     reasons:      { <name>: { <reason>: <number> } },
+//     log:          { <from>: { <name>: <ISO date of last vote> } },
+//     last:         { <room>: { user: <name>, reason: <reason>, thread: <thread_ts> } },
+//     lastByThread: { <room>: { <thread_ts>: { user: <name>, reason: <reason> } } }
 //   }
 
 const SPAM_WINDOW_MS = 5 * 1000
+const THREADS_PER_ROOM = parseInt(process.env.HUBOT_PLUSPLUS_THREADS_PER_ROOM, 10) || 50
 // Names that would hit Object.prototype instead of creating a score.
 const RESERVED = new Set(['__proto__', 'constructor', 'prototype'])
 const has = (obj, key) => Object.hasOwn(obj, key)
@@ -23,9 +26,9 @@ export default class ScoreKeeper {
     this.robot.brain.on('connected', () => { this.ready = true })
     const storageLoaded = () => {
       const data = this.robot.brain.data
-      data.plusPlus ??= { scores: {}, log: {}, reasons: {}, last: {} }
+      data.plusPlus ??= { scores: {}, log: {}, reasons: {}, last: {}, lastByThread: {} }
       this.storage = data.plusPlus
-      for (const key of ['scores', 'log', 'reasons', 'last']) {
+      for (const key of ['scores', 'log', 'reasons', 'last', 'lastByThread']) {
         if (typeof this.storage[key] !== 'object' || this.storage[key] === null) this.storage[key] = {}
       }
     }
@@ -43,22 +46,22 @@ export default class ScoreKeeper {
     return !RESERVED.has(key)
   }
 
-  saveUser (user, from, room, reason) {
-    this.saveScoreLog(user, from, room, reason)
+  saveUser (user, from, room, reason, thread) {
+    this.saveScoreLog(user, from, room, reason, thread)
     this.robot.brain.save()
     const reasons = this.storage.reasons[user]
     return [this.storage.scores[user], (reason != null && has(reasons, reason) && reasons[reason]) || 'none']
   }
 
-  add (user, from, room, reason) {
-    return this.#change(user, from, room, reason, 1)
+  add (user, from, room, reason, thread) {
+    return this.#change(user, from, room, reason, thread, 1)
   }
 
-  subtract (user, from, room, reason) {
-    return this.#change(user, from, room, reason, -1)
+  subtract (user, from, room, reason, thread) {
+    return this.#change(user, from, room, reason, thread, -1)
   }
 
-  #change (user, from, room, reason, delta) {
+  #change (user, from, room, reason, thread, delta) {
     if (!this.validate(user, from)) return [null, null]
     user = this.getUser(user)
     this.storage.scores[user] += delta
@@ -66,7 +69,7 @@ export default class ScoreKeeper {
       const reasons = this.storage.reasons[user]
       reasons[reason] = (has(reasons, reason) ? reasons[reason] : 0) + delta
     }
-    return this.saveUser(user, from, room, reason)
+    return this.saveUser(user, from, room, reason, thread)
   }
 
   erase (user, from, room, reason) {
@@ -90,18 +93,33 @@ export default class ScoreKeeper {
     return this.storage.reasons[this.getUser(user)]
   }
 
-  saveScoreLog (user, from, room, reason) {
+  saveScoreLog (user, from, room, reason, thread) {
     if (!has(this.storage.log, from) || typeof this.storage.log[from] !== 'object' || this.storage.log[from] === null) {
       this.storage.log[from] = {}
     }
     this.storage.log[from][user] = new Date().toISOString()
-    this.storage.last[room] = { user, reason }
+    this.storage.last[room] = { user, reason, thread }
+    if (thread != null) {
+      if (!has(this.storage.lastByThread, room)) this.storage.lastByThread[room] = {}
+      const threads = this.storage.lastByThread[room]
+      // Re-inserting moves the thread to the end, so the oldest keys are the least recently voted.
+      delete threads[thread]
+      threads[thread] = { user, reason }
+      for (const old of Object.keys(threads).slice(0, -THREADS_PER_ROOM)) delete threads[old]
+    }
   }
 
   last (room) {
     const last = has(this.storage.last, room) ? this.storage.last[room] : null
+    if (last == null) return [undefined, undefined, undefined]
+    if (typeof last === 'string') return [last, '', undefined]
+    return [last.user, last.reason, last.thread]
+  }
+
+  lastByThread (room, thread) {
+    const threads = has(this.storage.lastByThread, room) ? this.storage.lastByThread[room] : {}
+    const last = has(threads, thread) ? threads[thread] : null
     if (last == null) return [undefined, undefined]
-    if (typeof last === 'string') return [last, '']
     return [last.user, last.reason]
   }
 

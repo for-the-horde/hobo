@@ -20,14 +20,19 @@ export async function startRobot (scripts, { brain, connect = true, name = 'hobo
   if (connect) loadBrain()
 
   const said = []
-  robot.on('send', (envelope, ...strings) => said.push({ kind: 'send', room: envelope.room, text: strings.join('') }))
-  robot.on('reply', (envelope, ...strings) => said.push({ kind: 'reply', room: envelope.room, text: strings.join('') }))
+  const record = (kind) => (envelope, ...strings) => {
+    const thread = envelope.message?.thread_ts
+    said.push({ kind, room: envelope.room, text: strings.join(''), ...(thread != null && { thread }) })
+  }
+  robot.on('send', record('send'))
+  robot.on('reply', record('reply'))
 
   const user = (name, id = `U-${name}`) => robot.brain.userForId(id, { name, room: 'C-general' })
 
-  const say = async (text, { from = 'alice', room = 'C-general' } = {}) => {
+  let lastTs = 1000
+  const say = async (text, { from = 'alice', room = 'C-general', ts = `${++lastTs}.000100`, thread } = {}) => {
     const start = said.length
-    await robot.adapter.say(user(from), text, room)
+    await robot.adapter.say(user(from), text, room, { ts, thread })
     // let async listeners finish
     await new Promise((resolve) => setImmediate(resolve))
     return said.slice(start)

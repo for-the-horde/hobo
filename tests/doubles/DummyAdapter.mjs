@@ -8,7 +8,19 @@ export class DummyAdapter extends Adapter {
     this.name = 'DummyAdapter'
     this.messages = new Set()
     this.reactions = []
-    this.client = { web: { reactions: { add: async (args) => { this.reactions.push(args) } } } }
+    // Slack user records by ID, as users.info returns them; tests add admins here.
+    this.slackUsers = {}
+    this.client = {
+      web: {
+        reactions: { add: async (args) => { this.reactions.push(args) } },
+        users: {
+          info: async ({ user }) => {
+            if (!Object.hasOwn(this.slackUsers, user)) throw new Error('An API error occurred: user_not_found')
+            return { ok: true, user: { id: user, ...this.slackUsers[user] } }
+          }
+        }
+      }
+    }
   }
 
   async send (envelope, ...strings) {

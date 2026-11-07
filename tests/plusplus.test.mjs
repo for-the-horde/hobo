@@ -77,10 +77,32 @@ describe('plusplus', () => {
     assert.equal(bottom[0].text, '1. ian : 148')
   })
 
-  it('erases a score', async () => {
+  it('lets a workspace admin erase a score', async () => {
+    bot.robot.adapter.slackUsers['U-alice'] = { is_admin: true }
     const out = await bot.say('hobo erase ian')
     assert.equal(out[0].text, 'Erased points for ian')
     assert.equal(bot.robot.brain.data.plusPlus.scores.ian, undefined)
+  })
+
+  it('lets a workspace owner erase one reason', async () => {
+    bot.robot.adapter.slackUsers['U-alice'] = { is_admin: false, is_owner: true }
+    const out = await bot.say('hobo erase justin for reviving hobo')
+    assert.equal(out[0].text, 'Erased the following reason from justin: reviving hobo')
+    assert.deepEqual(bot.robot.brain.data.plusPlus.reasons.justin, {})
+  })
+
+  it('refuses to erase for anyone else', async () => {
+    bot.robot.adapter.slackUsers['U-bob'] = { is_admin: false, is_owner: false }
+    const out = await bot.say('hobo erase ian', { from: 'bob' })
+    assert.equal(out[0].kind, 'reply')
+    assert.equal(out[0].text, "Sorry, you don't have authorization to do that.")
+    assert.equal(bot.robot.brain.data.plusPlus.scores.ian, 148)
+  })
+
+  it('refuses to erase when Slack cannot say who the user is', async () => {
+    const out = await bot.say('hobo erase ian', { from: 'mallory' })
+    assert.equal(out[0].text, "Sorry, you don't have authorization to do that.")
+    assert.equal(bot.robot.brain.data.plusPlus.scores.ian, 148)
   })
 
   it('serves scores as JSON', async () => {
@@ -156,6 +178,30 @@ describe('plusplus in threads', () => {
     assert.equal(out[0].text, 'whoisjake has 177 points')
     assert.equal(out[0].thread, '500.1')
     assert.deepEqual(bot.robot.adapter.reactions, [])
+  })
+})
+
+describe('plusplus erase allowlist', () => {
+  let bot
+  beforeEach(async () => {
+    process.env.HUBOT_PLUSPLUS_ADMINS = 'U-carol, U-dave'
+    bot = await startRobot(['plusplus.mjs'], { brain: legacyBrain() })
+  })
+  afterEach(() => {
+    bot.stop()
+    delete process.env.HUBOT_PLUSPLUS_ADMINS
+  })
+
+  it('lets anyone in HUBOT_PLUSPLUS_ADMINS erase without asking Slack', async () => {
+    bot.robot.adapter.client.web.users.info = async () => { throw new Error('should not be called') }
+    const out = await bot.say('hobo erase ian', { from: 'dave' })
+    assert.equal(out[0].text, 'Erased points for ian')
+  })
+
+  it('still refuses users who are neither listed nor admins', async () => {
+    bot.robot.adapter.slackUsers['U-bob'] = {}
+    const out = await bot.say('hobo erase ian', { from: 'bob' })
+    assert.equal(out[0].text, "Sorry, you don't have authorization to do that.")
   })
 })
 

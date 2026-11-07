@@ -38,6 +38,26 @@ export function sparkline (numbers) {
   return numbers.map((n) => SPARK_TICKS[Math.round((n - min) / step)]).join('')
 }
 
+// Slack unfurls links in hobo's messages, so a reason with a URL in it would
+// unfurl again on every ++ and score lookup. A code span is never linked or
+// unfurled. This runs when a message is written, not when a reason is stored,
+// so reasons already in the brain are covered too. Slack's own <url|label>
+// markup is handled in case an older adapter stored it raw.
+const SLACK_LINK = /<((?:https?:\/\/|www\.)[^>|\s]+)(?:\|[^>]*)?>/gi
+const BARE_URL = /(?:https?:\/\/|www\.)[^\s<>`]+/gi
+const TRAILING_PUNCTUATION = /[.,;:!?)\]}'"]+$/
+
+export function quoteUrls (text) {
+  if (!text) return text
+  return text
+    .replace(SLACK_LINK, '$1')
+    .replace(BARE_URL, (url) => {
+      const tail = url.match(TRAILING_PUNCTUATION)?.[0] ?? ''
+      const core = url.slice(0, url.length - tail.length)
+      return core ? `\`${core}\`${tail}` : url
+    })
+}
+
 export function cleanName (name) {
   if (!name) return name
   const trailing = name.charAt(0) === ':' ? /(^\s*@)|([,\s]*$)/g : /(^\s*@)|([,:\s]*$)/g
@@ -100,14 +120,15 @@ export default (robot) => {
 
     if (score == null) return
 
+    const shown = quoteUrls(reason)
     let message
     if (reason != null) {
       if (reasonScore === 1 || reasonScore === -1) {
         message = (score === 1 || score === -1)
-          ? `${name} has ${score} point for ${reason}.`
-          : `${name} has ${score} points, ${reasonScore} of which is for ${reason}.`
+          ? `${name} has ${score} point for ${shown}.`
+          : `${name} has ${score} points, ${reasonScore} of which is for ${shown}.`
       } else {
-        message = `${name} has ${score} points, ${reasonScore} of which are for ${reason}.`
+        message = `${name} has ${score} points, ${reasonScore} of which are for ${shown}.`
       }
     } else {
       message = score === 1 ? `${name} has ${score} point` : `${name} has ${score} points`
@@ -152,7 +173,7 @@ export default (robot) => {
     }
 
     scoreKeeper.erase(name, from, res.message.room, reason)
-    await res.send(reason != null ? `Erased the following reason from ${name}: ${reason}` : `Erased points for ${name}`)
+    await res.send(reason != null ? `Erased the following reason from ${name}: ${quoteUrls(reason)}` : `Erased points for ${name}`)
   })
 
   robot.respond(new RegExp(`(?:${scoreKeyword}) (?:for\\s+)?(.*)`, 'i'), async (res) => {
@@ -163,7 +184,7 @@ export default (robot) => {
     const reasons = scoreKeeper.reasonsForUser(name)
 
     if (reasons && Object.keys(reasons).length > 0) {
-      const lines = Object.entries(reasons).map(([key, val]) => `\n${key}: ${val} points`).join('')
+      const lines = Object.entries(reasons).map(([key, val]) => `\n${quoteUrls(key)}: ${val} points`).join('')
       await res.send(`${name} has ${score} points. Here are some ${reasonsKeyword}:${lines}`)
     } else {
       await res.send(`${name} has ${score} points.`)

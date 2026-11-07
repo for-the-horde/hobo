@@ -1,7 +1,7 @@
 import { describe, it, beforeEach, afterEach } from 'node:test'
 import assert from 'node:assert/strict'
 import { startRobot } from './helpers.mjs'
-import { sparkline, cleanName } from '../scripts/plusplus.mjs'
+import { sparkline, cleanName, quoteUrls } from '../scripts/plusplus.mjs'
 
 // Shaped like hobo's real brain (hubot-plusplus 1.4.0 format).
 const legacyBrain = () => ({
@@ -214,6 +214,15 @@ describe('plusplus helpers', () => {
     assert.equal(sparkline([1, 5, 10]), '▁▃▇')
     assert.equal(sparkline([3, 3]), '▁▁')
   })
+
+  it('wraps URLs in code spans so Slack does not unfurl them', () => {
+    assert.equal(quoteUrls('reviving hobo'), 'reviving hobo')
+    assert.equal(quoteUrls('this https://example.com/a?b=1 thing'), 'this `https://example.com/a?b=1` thing')
+    assert.equal(quoteUrls('the docs (http://example.com/docs).'), 'the docs (`http://example.com/docs`).')
+    assert.equal(quoteUrls('www.example.com, again'), '`www.example.com`, again')
+    assert.equal(quoteUrls('<https://example.com|example>'), '`https://example.com`')
+    assert.equal(quoteUrls(undefined), undefined)
+  })
 })
 
 describe('plusplus before the brain loads', () => {
@@ -260,5 +269,28 @@ describe('bot name vs alias', () => {
     } finally {
       bot.stop()
     }
+  })
+})
+
+describe('plusplus reasons with URLs', () => {
+  let bot
+  beforeEach(async () => {
+    const brain = legacyBrain()
+    brain.plusPlus.reasons.ian = { 'finding https://example.com/thing': 2 }
+    bot = await startRobot(['plusplus.mjs'], { brain })
+  })
+  afterEach(() => bot.stop())
+
+  it('quotes a URL in a new vote reply but stores the reason as typed', async () => {
+    const out = await bot.say('justin++ for https://example.com/post', { from: 'alice' })
+    assert.equal(out[0].text, 'justin has 218 points, 1 of which is for `https://example.com/post`.')
+    assert.equal(bot.robot.brain.data.plusPlus.reasons.justin['https://example.com/post'], 1)
+  })
+
+  it('quotes URLs in reasons already in the brain, on ++ and on score', async () => {
+    const vote = await bot.say('ian++ for finding https://example.com/thing', { from: 'alice' })
+    assert.equal(vote[0].text, 'ian has 149 points, 3 of which are for finding `https://example.com/thing`.')
+    const score = await bot.say('hobo score ian')
+    assert.match(score[0].text, /\nfinding `https:\/\/example\.com\/thing`: 3 points/)
   })
 })

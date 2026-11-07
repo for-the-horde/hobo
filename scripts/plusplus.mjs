@@ -7,6 +7,7 @@
 //   HUBOT_PLUSPLUS_REASONS - word used when listing reasons. Default: "raisins"
 //   HUBOT_PLUSPLUS_CONJUNCTIONS - pipe separated reason conjunctions. Default: "for|because|cause|cuz|as"
 //   HUBOT_PLUSPLUS_THREADS_PER_ROOM - threads per room that remember their last vote for a bare ++. Default: 50
+//   HUBOT_PLUSPLUS_ADMINS - comma separated Slack user IDs that may erase, on top of workspace admins and owners
 //
 // Commands:
 //   <name>++ [<reason>] - Increment score for a name (for a reason)
@@ -15,7 +16,7 @@
 //   hubot score <name> - Display the score for a name and some of the reasons
 //   hubot top <amount> - Display the top scoring <amount>
 //   hubot bottom <amount> - Display the bottom scoring <amount>
-//   hubot erase <name> [<reason>] - Remove the score for a name (for a reason)
+//   hubot erase <name> [<reason>] - Remove the score for a name (for a reason). Admins only
 //
 // URLs:
 //   GET /<robot name>/scores[?name=<name>][&direction=<top|bottom>][&limit=<10>]
@@ -118,18 +119,34 @@ export default (robot) => {
     robot.emit('plus-one', { name, direction: operator, room, reason, from })
   })
 
-  robot.respond(new RegExp(`(?:erase )(${NAME_CHARS})(?:\\s+(?:for|because|cause|cuz)\\s+(.+))?$`, 'i'), async (res) => {
+  const extraAdmins = new Set((process.env.HUBOT_PLUSPLUS_ADMINS || '').split(',').map((id) => id.trim()).filter(Boolean))
+
+  // Erasing is for Slack workspace admins and owners, plus HUBOT_PLUSPLUS_ADMINS.
+  // Asks Slack on every erase, so someone who loses admin loses access right away.
+  // If Slack can't be asked, the erase is refused.
+  const canErase = async (user) => {
+    if (extraAdmins.has(user?.id)) return true
+    const users = robot.adapter.client?.web?.users
+    if (users == null || user?.id == null) return false
+    try {
+      const { user: info } = await users.info({ user: user.id })
+      return Boolean(info?.is_admin || info?.is_owner)
+    } catch (err) {
+      robot.logger.warn(`plusplus: could not check whether ${user.id} may erase: ${err.message}`)
+      return false
+    }
+  }
+
+  // The name is lazy so "erase justin for reviving hobo" leaves the reason to the reason group.
+  robot.respond(new RegExp(`(?:erase )(${NAME_CHARS}?)(?:\\s+(?:for|because|cause|cuz)\\s+(.+))?$`, 'i'), async (res) => {
     if (notReady()) return
     let [, name, reason] = res.match
     const from = (res.message.user.name || '').toLowerCase()
-    const user = res.envelope.user
     reason = reason?.trim().toLowerCase()
     name = cleanName(name)
     if (!name || !scoreKeeper.isValidKey(name) || (reason != null && !scoreKeeper.isValidKey(reason))) return
 
-    const auth = robot.auth
-    const isAdmin = auth?.hasRole(user, 'plusplus-admin') || auth?.hasRole(user, 'admin')
-    if (auth && !isAdmin) {
+    if (!(await canErase(res.message.user))) {
       await res.reply("Sorry, you don't have authorization to do that.")
       return
     }

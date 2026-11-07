@@ -57,11 +57,12 @@ describe('plusplus', () => {
     assert.equal(legacy[0].text, 'whoisjake has 177 points')
   })
 
-  it('writes vote logs as ISO strings in the existing layout', async () => {
-    await bot.say('justin++', { from: 'alice' })
-    const stamp = bot.robot.brain.data.plusPlus.log.alice.justin
-    assert.match(stamp, /^\d{4}-\d\d-\d\dT/)
-    assert.deepEqual(bot.robot.brain.data.plusPlus.last['C-general'], { user: 'justin', reason: undefined })
+  it('writes vote logs as ISO strings and remembers the last vote per room and thread', async () => {
+    await bot.say('justin++', { from: 'alice', ts: '100.1' })
+    const { log, last, lastByThread } = bot.robot.brain.data.plusPlus
+    assert.match(log.alice.justin, /^\d{4}-\d\d-\d\dT/)
+    assert.deepEqual(last['C-general'], { user: 'justin', reason: undefined, thread: '100.1' })
+    assert.deepEqual(lastByThread['C-general'], { '100.1': { user: 'justin', reason: undefined } })
   })
 
   it('shows a score with reasons', async () => {
@@ -86,6 +87,75 @@ describe('plusplus', () => {
     const port = bot.robot.server.address().port
     const res = await fetch(`http://localhost:${port}/hobo/scores?limit=1`)
     assert.deepEqual(await res.json(), [{ name: 'justin', score: 217 }])
+  })
+})
+
+describe('plusplus in threads', () => {
+  let bot
+  beforeEach(async () => { bot = await startRobot(['thread-replies.mjs', 'plusplus.mjs'], { brain: legacyBrain() }) })
+  afterEach(() => bot.stop())
+
+  it('a bare ++ in a thread applies to the last name voted on in that thread', async () => {
+    await bot.say('newperson++ for showing up', { from: 'alice', ts: '100.1' })
+    await bot.say('ian++', { from: 'carol', ts: '200.1' })
+    const out = await bot.say('++', { from: 'bob', ts: '100.2', thread: '100.1' })
+    assert.equal(out[0].text, 'newperson has 2 points, 2 of which are for showing up.')
+    assert.equal(out[0].thread, '100.1')
+    assert.deepEqual(bot.robot.adapter.reactions, [])
+  })
+
+  it('a bare ++ in a thread with no votes in it does nothing', async () => {
+    await bot.say('newperson++', { from: 'alice', ts: '100.1' })
+    await bot.say(':siren:', { from: 'bob', ts: '300.1' })
+    assert.deepEqual(await bot.say('++', { from: 'carol', ts: '300.2', thread: '300.1' }), [])
+    assert.equal(bot.robot.brain.data.plusPlus.scores.newperson, 1)
+  })
+
+  it('a top-level bare ++ posts the score in the thread of the vote it repeats and marks the ++', async () => {
+    await bot.say('newperson++ for showing up', { from: 'alice', ts: '100.1' })
+    const out = await bot.say('++', { from: 'bob', ts: '100.5' })
+    assert.equal(out[0].text, 'newperson has 2 points, 2 of which are for showing up.')
+    assert.equal(out[0].thread, '100.1')
+    assert.deepEqual(bot.robot.adapter.reactions, [{ channel: 'C-general', name: 'thread', timestamp: '100.5' }])
+
+    const later = await bot.say('++', { from: 'carol', ts: '100.7', thread: '100.1' })
+    assert.equal(later[0].text, 'newperson has 3 points, 3 of which are for showing up.')
+  })
+
+  it("a top-level bare ++ repeats the channel's latest vote even when it was in a thread", async () => {
+    await bot.say('newperson++', { from: 'alice', ts: '100.1' })
+    await bot.say(':siren: ++', { from: 'bob', ts: '300.2', thread: '300.1' })
+    const out = await bot.say('++', { from: 'carol', ts: '400.1' })
+    assert.equal(out[0].text, ':siren: has 2 points')
+    assert.equal(out[0].thread, '300.1')
+  })
+
+  it('still counts the vote when the reaction cannot be added', async () => {
+    bot.robot.adapter.client.web.reactions.add = async () => { throw new Error('An API error occurred: missing_scope') }
+    const votes = []
+    bot.robot.on('plus-one', (vote) => votes.push(vote))
+    await bot.say('newperson++', { from: 'alice', ts: '100.1' })
+    const out = await bot.say('++', { from: 'bob', ts: '100.5' })
+    assert.equal(out[0].thread, '100.1')
+    assert.equal(votes.length, 2)
+  })
+
+  it('caps the threads remembered per room, dropping the least recently voted', async () => {
+    for (let i = 0; i < 50; i++) await bot.say('newperson++', { from: `voter${i}`, ts: `${100 + i}.1` })
+    await bot.say('++', { from: 'alice', ts: '100.2', thread: '100.1' })
+    await bot.say('ian++', { from: 'bob', ts: '200.1' })
+    const threads = bot.robot.brain.data.plusPlus.lastByThread['C-general']
+    assert.equal(Object.keys(threads).length, 50)
+    assert.ok(Object.hasOwn(threads, '100.1'))
+    assert.ok(!Object.hasOwn(threads, '101.1'))
+    assert.deepEqual(await bot.say('++', { from: 'carol', ts: '101.2', thread: '101.1' }), [])
+  })
+
+  it('a top-level bare ++ after a vote saved without a thread replies under the ++', async () => {
+    const out = await bot.say('++', { from: 'alice', room: 'C-legacy', ts: '500.1' })
+    assert.equal(out[0].text, 'whoisjake has 177 points')
+    assert.equal(out[0].thread, '500.1')
+    assert.deepEqual(bot.robot.adapter.reactions, [])
   })
 })
 

@@ -61,6 +61,35 @@ describe('hobo scripts', () => {
   })
 })
 
+describe('thread-replies', () => {
+  let bot
+  beforeEach(async () => { bot = await startRobot(['thread-replies.mjs', 'flip.mjs', 'code-of-conduct.mjs']) })
+  afterEach(() => bot.stop())
+
+  it('replies to a top-level channel message in a thread under it', async () => {
+    const out = await bot.say('hobo flip', { ts: '100.1' })
+    assert.deepEqual(out, [{ kind: 'send', room: 'C-general', text: '(╯°□°）╯︵ ┻━┻', thread: '100.1' }])
+  })
+
+  it('replies inside the thread a message was posted in', async () => {
+    const out = await bot.say('hobo flip', { ts: '100.2', thread: '100.1' })
+    assert.equal(out[0].thread, '100.1')
+  })
+
+  it('does not thread replies in a 1:1 DM', async () => {
+    const out = await bot.say('hobo flip', { room: 'D-carol' })
+    assert.deepEqual(out, [{ kind: 'send', room: 'D-carol', text: '(╯°□°）╯︵ ┻━┻' }])
+  })
+
+  it('threads the reply but not a message sent to another room', async () => {
+    const out = await bot.say('hobo code of conduct', { from: 'carol', ts: '100.1' })
+    assert.equal(out[0].room, 'U-carol')
+    assert.equal(out[0].thread, undefined)
+    assert.equal(out[1].text, 'Sent via DM! Thanks for asking... :hug:')
+    assert.equal(out[1].thread, '100.1')
+  })
+})
+
 describe('urban', () => {
   const fakeFetch = (body, ok = true) => async () => ({ ok, status: ok ? 200 : 503, json: async () => body })
 
